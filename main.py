@@ -7,39 +7,14 @@ import sys
 from pyvis.network import Network
 import random
  
-class Graph(object):
+class Packet(object):
     #Constructor
-    def __init__(self, graphDictionary, nodes): 
-        self.graph = self.fillGraph(graphDictionary, nodes)
-        self.nodes = nodes
+    def __init__(self, node = None): 
+        self.node = node
 
-    #Fill graph with nodes and edge values
-    def fillGraph(self, graphDictionary, nodes):
-        graph = {}
-        for node in nodes:
-            graph[node] = {}
-        graph.update(graphDictionary)
-        for node1, edges in graph.items():
-            for node2, value in edges.items():
-                if graph[node2].get(node1, False) == False:
-                    graph[node2][node1] = value   
-        return graph
 
-    #Returns all nodes
-    def returnNodes(self):
-        return self.nodes
 
-    #Returns edges of a specific node
-    def returnEdges(self, node):
-        edges = []
-        for neighbor in self.nodes:
-            if self.graph[node].get(neighbor, False) != False:
-                edges.append(neighbor)
-        return edges
 
-    #Returns value of an edge between two nodes
-    def returnValue(self, node1, node2):
-        return self.graph[node1][node2]
 
 def dijkstra(graph, firstNode):
     unvisitedNodes = list(graph.returnNodes())   
