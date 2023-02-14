@@ -6,6 +6,8 @@
 import sys
 from pyvis.network import Network
 import random
+
+probability_bank = [0.2, 0.4, 0.5, 0.6, 0.8]
  
 class Packet(object):
     #Constructor
@@ -43,6 +45,25 @@ def main():
                 [14, 15, 16, 18, 20, 5]]
 
     generateVisual(branches, routers)
+    p = random.choice(probability_bank)
+
+    # marking procedure at router r
+    # for packet in packets:
+    #     x = random(0, 10)/10
+    #     if x <= p:
+    #         packet.node = r
+
+    #path reconstruction at victim v:
+    # NodeTable = [] # Intialize Node Table
+    # for packet in attacker_packets:
+    #     z = any(packet.node in sublist for sublist in NodeTable) # lookup packet.node in NodeTable
+    #     if z != None:
+    #         z[1] += z[1]
+    #     else:
+    #         NodeTable.append([packet.node, 1])
+    #     # Sort table by count
+    #     NodeTable.sort(key = lambda x: x[1])
+
     
     #Console prints the path from G to A with the edge weights
 if __name__ == "__main__":
