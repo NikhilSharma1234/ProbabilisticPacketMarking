@@ -5,15 +5,20 @@
 
 import sys
 from pyvis.network import Network
+from treelib import Node, Tree
 import random
 
-probability_bank = [0.2, 0.4, 0.5, 0.6, 0.8]
-sending_growth_bank = [20, 30, 40, 80, 100]
- 
-class Packet(object):
+class NodePacket(object):
     #Constructor
     def __init__(self, node = None): 
         self.node = node
+
+class EdgePacket(object):
+    #Constructor
+    def __init__(self, start = None, end = None, distance = 0) -> None:
+        self.start = start
+        self.end = end
+        self.distance = distance
 
 def generateVisual(branches, routers):
     # Simulates pyvis graph visualizer
@@ -31,10 +36,12 @@ def generateVisual(branches, routers):
     # Pop browser and show graph
     # net.show("nodes.html")
 
-def nodeSamplingSingle(branches, normal_packets, attacker_packets, p, growth_factor):
+def nodeSamplingSingle(branches, p, growth_factor, multiple):
+    normal_packets = [NodePacket() for i in range(10)]
+    attacker_packets = [NodePacket() for i in range(10*growth_factor)]
     iteration = 0
     for branch in branches:
-        if (iteration == 1):
+        if (iteration == 1 or iteration == 0):
             for router in branch:
                 for packet in attacker_packets:
                     x = random.randint(0, 10)/10
@@ -55,10 +62,10 @@ def nodeSamplingSingle(branches, normal_packets, attacker_packets, p, growth_fac
     print([packet.node for packet in normal_packets])
     print([packet.node for packet in attacker_packets])
 
-
+    all_packets = normal_packets + attacker_packets
     #path reconstruction at victim v:
     NodeTable = [] # Intialize Node Table
-    for packet in attacker_packets:
+    for packet in all_packets:
         z = next((x for x in NodeTable if x[0] == packet.node), None) # lookup packet.node in NodeTable
         if z != None:
             z[1] += z[1]
@@ -67,6 +74,74 @@ def nodeSamplingSingle(branches, normal_packets, attacker_packets, p, growth_fac
         # Sort table by count
         NodeTable.sort(key = lambda x: x[1])
     print(NodeTable)
+
+def edgeSamplingSingle(branches, p, growth_factor, multiple):
+    normal_packets = [EdgePacket() for i in range(10)]
+    attacker_packets = [EdgePacket() for i in range(10*growth_factor)]
+    iteration = 0
+    for branch in branches:
+        if (iteration == 1 or iteration == 0):
+            for router in branch:
+                for packet in attacker_packets:
+                    x = random.randint(0, 10)/10
+                    if x <= p:
+                        packet.start = router
+                        packet.distance = 0
+                    else:
+                        if packet.distance == 0:
+                            packet.end = router
+                        packet.distance += 1
+        elif (iteration == 2 or iteration == 3):
+            for router in branch:
+                for packet in normal_packets:
+                    x = random.randint(0, 10)/10
+                    if x <= p:
+                        packet.start = router
+                        packet.distance = 0
+                    else:
+                        if packet.distance == 0:
+                            packet.end = router
+                        packet.distance += 1
+        iteration += 1
+
+    print(iteration)
+    print("Growth Factor: " + str(growth_factor))
+    print("Normal Packet Amount: " + str(len(normal_packets)))
+    print("Attacker Packet Amount: " + str(len(attacker_packets)))
+    # print([packet.node for packet in normal_packets])
+    # print([packet.node for packet in attacker_packets])
+    all_packets = normal_packets + attacker_packets
+    iterator = 0
+    #path reconstruction at victim v:
+    tree = Tree()
+    tree.create_node("V", "v")
+    for packet in all_packets:
+        try:
+            if packet.distance == 0:
+                tree.create_node(packet.start, packet.start, parent="v", data=0)
+            else:
+                tree.create_node(packet.start, packet.start, parent=packet.end, data=packet.distance)
+        except:
+            None
+    newTree = Tree(tree)
+    for node in tree.all_nodes_itr():
+        if len(str(node.identifier)) > 9:
+            newTree.remove_node(node.identifier)
+
+    attacker_one = ['v', 5, 4, 3, 2, 1, 19]
+    attacker_two = ['v', 5, 9, 12, 8, 7, 6]
+    success_set = newTree.paths_to_leaves()
+    print(success_set)
+    if attacker_one in success_set:
+        print("Attacker 1: Success")
+    else:
+        print("Attacker 1: Failed")
+
+    if multiple and attacker_two in success_set:
+        print("Attacker 2: Success")
+    else:
+        print("Attacker 2: Failed")
+    newTree.show()
 
 
 def main():
@@ -83,13 +158,12 @@ def main():
                 [14, 15, 16, 18, 20, 5]]
 
     generateVisual(branches, routers)
-    p = random.choice(probability_bank)
-    growth_factor = random.choice(sending_growth_bank)
+    p = 0.4
+    growth_factor = 1000
 
-    normal_packets = [Packet() for i in range(10)]
-    attacker_packets = [Packet() for i in range(10*growth_factor)]
+    # nodeSamplingSingle(branches, p, growth_factor, True)
 
-    nodeSamplingSingle(branches, normal_packets, attacker_packets, p, growth_factor)
+    edgeSamplingSingle(branches, p, growth_factor, True)
 
 
     
